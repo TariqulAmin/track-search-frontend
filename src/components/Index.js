@@ -2,9 +2,10 @@ import React from "react";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Spinner from "./Spinner";
-import ReactAudioPlayer from 'react-audio-player';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import AudioPlayer from "./AudioPlayer";
+import Track from "./Track";
 
 const Index = () => {
     const [tracks, setTracks] = useState([])
@@ -12,10 +13,13 @@ const Index = () => {
     const [userInput, setUserInput] = useState("")
     const [url, setUrl] = useState("")
 
+    const API_URL = "https://track-search-backend.onrender.com/api"
+    const errorMessage = "Please input something"
+
     const getData = async () => {
         try {
             setLoading(true)
-            const { data } = await axios.get(`https://track-search-backend.onrender.com/api/tracks/search?searchText=${userInput}`);
+            const { data } = await axios.get(`${API_URL}/tracks/search?searchText=${userInput}`);
             if (data.status === "ok") {
                 setTracks(data.payload);
                 setLoading(false)
@@ -32,8 +36,10 @@ const Index = () => {
     const findTrack = e => {
         e.preventDefault();
         if (userInput === "") {
-            toast.error("Please input something", {
+            toast.error(errorMessage, {
                 position: toast.POSITION.TOP_RIGHT,
+                autoClose: 2000,
+                hideProgressBar: true
             });
             return
         }
@@ -73,43 +79,14 @@ const Index = () => {
                 <h3 className="text-center mb-4">Search Result</h3>
                 {loading ? <Spinner /> : tracks === undefined || tracks.length === 0 ? <h4 className="text-center mb-4 mt-5">No song found</h4> :
                     (tracks.map(track => (
-                        <div
-                            style={{ cursor: "pointer" }}
-                            onClick={() => handleTrackLick(track.url)}
-                            key={track._id}
-                            className="col-md-6">
-                            <div className="card mb-4 shadow-sm">
-                                <div className="card-body">
-                                    <div className="row">
-                                        <img
-                                            className="col-4 img-responsive"
-                                            src={track.artwork}
-                                            alt="" />
-                                        <div className="card-text col-8">
-                                            <div>
-                                                <span className="fw-bold">Title:</span>  {track.title}
-                                            </div>
-                                            <div className="mb-3">
-                                                <span className="fw-bold">Artist:</span> {track.artist}
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
+                        <Track
+                            track={track}
+                            handleTrackLick={handleTrackLick}
+                        />
                     )))}
             </div>
-            <div style={{ position: "fixed", bottom: "0", width: "100%" }}>
-                <ReactAudioPlayer
-                    src={url}
-                    autoPlay
-                    controls
-                />
-            </div>
+            <AudioPlayer url={url} />
             <ToastContainer />
-
         </>
     );
 };
